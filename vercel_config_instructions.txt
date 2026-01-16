@@ -1,0 +1,11 @@
+Para configurar a `POSTGRES_URL` na Vercel, siga estas etapas:
+
+1.  **Vá para o seu painel da Vercel** (vercel.com) e selecione o seu projeto.
+2.  Clique na aba **'Settings' (Configurações)**.
+3.  No menu lateral, selecione **'Environment Variables' (Variáveis de Ambiente)**.
+4.  Adicione uma nova variável com o nome **`POSTGRES_URL`** e cole *exatamente a mesma URL* que você usou no seu arquivo `server/.env` (a que começa com `postgresql://...`).
+5.  Certifique-se de que a variável esteja configurada para os ambientes **'Development', 'Preview' e 'Production'** (selecione todos eles).
+
+Depois de adicionar a variável, a Vercel irá refazer o deploy do seu projeto automaticamente ou você pode acionar um novo deploy manualmente.
+
+Por favor, me avise quando você tiver configurado a variável de ambiente na Vercel e se o deploy funcionar ou se encontrar algum erro!

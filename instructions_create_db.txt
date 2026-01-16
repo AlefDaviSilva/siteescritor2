@@ -1,0 +1,17 @@
+Ok, sem problemas. Você pode criar um banco de dados Postgres gratuito diretamente na Vercel. Siga estes passos:
+
+1.  **Navegue até a aba 'Storage':**
+    -   No seu projeto na Vercel, clique na aba 'Storage'.
+
+2.  **Selecione 'Postgres':**
+    -   Clique em 'Postgres' para começar a criar um novo banco de dados.
+
+3.  **Crie o banco de dados:**
+    -   Siga as instruções na tela para criar o banco de dados. Você precisará dar um nome e escolher uma região.
+    -   Aceite os termos para criar o banco de dados.
+
+4.  **Copie a URL de Conexão:**
+    -   Após a criação, a Vercel mostrará a página do seu novo banco de dados.
+    -   Copie a 'Connection String' (URL de conexão) que começa com `postgres://...`
+
+Depois de copiar a URL, me avise.

@@ -13,9 +13,8 @@
   "type": "commonjs",
   "dependencies": {
     "@vercel/blob": "^2.0.0",
-    "@vercel/postgres": "^0.10.0",
+    "@neondatabase/serverless": "^0.9.1",
     "bcryptjs": "^3.0.3",
-    "better-sqlite3": "^12.6.0",
     "body-parser": "^2.2.2",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",

@@ -1,4 +1,5 @@
-const { sql } = require('@vercel/postgres');
+const { neon } = require('@neondatabase/serverless');
+const sql = neon(process.env.POSTGRES_URL);
 
 const createTables = async () => {
   try {
@@ -47,7 +48,7 @@ const createTables = async () => {
     console.log('Database tables created or already exist.');
 
     // Insert default admin user if not exists
-    const { rows: users } = await sql`SELECT id FROM users WHERE username = ${process.env.ADMIN_USERNAME}`;
+    const users = await sql`SELECT id FROM users WHERE username = ${process.env.ADMIN_USERNAME}`;
     
     if (users.length === 0) {
       await sql`

@@ -36,8 +36,8 @@ const jsonParser = bodyParser.json();
 app.post('/api/login', jsonParser, async (req, res) => {
   const { username, password } = req.body;
   try {
-    const { rows } = await sql`SELECT password_hash FROM users WHERE username = ${username}`;
-    const user = rows[0];
+    const users = await sql`SELECT password_hash FROM users WHERE username = ${username}`;
+    const user = users[0];
     if (user && await bcrypt.compare(password, user.password_hash)) {
       const accessToken = jwt.sign({ name: username }, jwtSecret, { expiresIn: '1h' });
       res.json({ accessToken });
@@ -51,20 +51,19 @@ app.post('/api/login', jsonParser, async (req, res) => {
 
 // --- Personal Texts ---
 app.post('/api/texts', jsonParser, authenticateToken, async (req, res) => {
-  const { title, synopsis, content, is_private, password } = req.body;
-  const { rows } = await sql`INSERT INTO personal_texts (title, synopsis, content, is_private, password) VALUES (${title}, ${synopsis}, ${content}, ${is_private || false}, ${password || null}) RETURNING id`;
+  const rows = await sql`INSERT INTO personal_texts (title, synopsis, content, is_private, password) VALUES (${title}, ${synopsis}, ${content}, ${is_private || false}, ${password || null}) RETURNING id`;
   res.status(201).json({ id: rows[0].id, message: 'Personal text created.' });
 });
 
 app.get('/api/texts', async (req, res) => {
-  const { rows } = await sql`SELECT id, title, synopsis, is_private FROM personal_texts`;
+  const rows = await sql`SELECT id, title, synopsis, is_private FROM personal_texts`;
   res.json(rows);
 });
 
 app.get('/api/texts/:id', async (req, res) => {
   const { id } = req.params;
   const { password } = req.query;
-  const { rows } = await sql`SELECT * FROM personal_texts WHERE id = ${id}`;
+  const rows = await sql`SELECT * FROM personal_texts WHERE id = ${id}`;
   const text = rows[0];
   if (!text) return res.status(404).json({ message: 'Text not found.' });
   if (text.is_private && (!password || password !== text.password)) {
@@ -77,32 +76,31 @@ app.put('/api/texts/:id', jsonParser, authenticateToken, async (req, res) => {
   const { id } = req.params;
   const { title, synopsis, content, is_private, password } = req.body;
   const result = await sql`UPDATE personal_texts SET title = ${title}, synopsis = ${synopsis}, content = ${content}, is_private = ${is_private || false}, password = ${password || null} WHERE id = ${id}`;
-  if (result.rowCount === 0) return res.status(404).json({ message: 'Text not found.' });
+  if (result.count === 0) return res.status(404).json({ message: 'Text not found.' });
   res.json({ message: 'Personal text updated.' });
 });
 
 app.delete('/api/texts/:id', authenticateToken, async (req, res) => {
   const { id } = req.params;
   const result = await sql`DELETE FROM personal_texts WHERE id = ${id}`;
-  if (result.rowCount === 0) return res.status(404).json({ message: 'Text not found.' });
+  if (result.count === 0) return res.status(404).json({ message: 'Text not found.' });
   res.json({ message: 'Personal text deleted.' });
 });
 
 // --- Articles ---
 app.post('/api/articles', jsonParser, authenticateToken, async (req, res) => {
-  const { title, content, author, link } = req.body;
-  const { rows } = await sql`INSERT INTO parental_alienation_articles (title, content, author, link) VALUES (${title}, ${content}, ${author}, ${link}) RETURNING id`;
+  const rows = await sql`INSERT INTO parental_alienation_articles (title, content, author, link) VALUES (${title}, ${content}, ${author}, ${link}) RETURNING id`;
   res.status(201).json({ id: rows[0].id, message: 'Article created.' });
 });
 
 app.get('/api/articles', async (req, res) => {
-  const { rows } = await sql`SELECT * FROM parental_alienation_articles`;
+  const rows = await sql`SELECT * FROM parental_alienation_articles`;
   res.json(rows);
 });
 
 app.get('/api/articles/:id', async (req, res) => {
   const { id } = req.params;
-  const { rows } = await sql`SELECT * FROM parental_alienation_articles WHERE id = ${id}`;
+  const rows = await sql`SELECT * FROM parental_alienation_articles WHERE id = ${id}`;
   if (rows.length === 0) return res.status(404).json({ message: 'Article not found.' });
   res.json(rows[0]);
 });
@@ -111,14 +109,14 @@ app.put('/api/articles/:id', jsonParser, authenticateToken, async (req, res) => 
   const { id } = req.params;
   const { title, content, author, link } = req.body;
   const result = await sql`UPDATE parental_alienation_articles SET title = ${title}, content = ${content}, author = ${author}, link = ${link} WHERE id = ${id}`;
-  if (result.rowCount === 0) return res.status(404).json({ message: 'Article not found.' });
+  if (result.count === 0) return res.status(404).json({ message: 'Article not found.' });
   res.json({ message: 'Article updated.' });
 });
 
 app.delete('/api/articles/:id', authenticateToken, async (req, res) => {
   const { id } = req.params;
   const result = await sql`DELETE FROM parental_alienation_articles WHERE id = ${id}`;
-  if (result.rowCount === 0) return res.status(404).json({ message: 'Article not found.' });
+  if (result.count === 0) return res.status(404).json({ message: 'Article not found.' });
   res.json({ message: 'Article deleted.' });
 });
 
@@ -130,10 +128,10 @@ app.post('/api/diary/upload', authenticateToken, async (req, res) => {
   }
   try {
     const blob = await put(filename, req, { access: 'public', token: process.env.BLOB_READ_WRITE_TOKEN });
-    const { rows: users } = await sql`SELECT id FROM users WHERE username = ${req.user.name}`;
+    const users = await sql`SELECT id FROM users WHERE username = ${req.user.name}`;
     const userId = users[0]?.id;
     if (!userId) return res.status(401).json({ message: 'User not found.' });
-    const { rows } = await sql`INSERT INTO diary_entries (user_id, url) VALUES (${userId}, ${blob.url}) RETURNING *`;
+    const rows = await sql`INSERT INTO diary_entries (user_id, url) VALUES (${userId}, ${blob.url}) RETURNING *`;
     res.status(201).json({ ...rows[0], message: 'Diary entry uploaded.' });
   } catch (error) {
     res.status(500).json({ message: 'Error uploading file.', error: error.message });
@@ -141,24 +139,24 @@ app.post('/api/diary/upload', authenticateToken, async (req, res) => {
 });
 
 app.get('/api/diary/list', authenticateToken, async (req, res) => {
-  const { rows: users } = await sql`SELECT id FROM users WHERE username = ${req.user.name}`;
+  const users = await sql`SELECT id FROM users WHERE username = ${req.user.name}`;
   const userId = users[0]?.id;
   if (!userId) return res.status(401).json({ message: 'User not found.' });
-  const { rows } = await sql`SELECT * FROM diary_entries WHERE user_id = ${userId} ORDER BY upload_date DESC`;
+  const rows = await sql`SELECT * FROM diary_entries WHERE user_id = ${userId} ORDER BY upload_date DESC`;
   res.json(rows);
 });
 
 app.delete('/api/diary/:id', authenticateToken, async (req, res) => {
     const { id } = req.params;
-    const { rows: users } = await sql`SELECT id FROM users WHERE username = ${req.user.name}`;
+    const users = await sql`SELECT id FROM users WHERE username = ${req.user.name}`;
     const userId = users[0]?.id;
     if (!userId) return res.status(401).json({ message: 'User not found.' });
-    const { rows: entries } = await sql`SELECT url FROM diary_entries WHERE id = ${id} AND user_id = ${userId}`;
+    const entries = await sql`SELECT url FROM diary_entries WHERE id = ${id} AND user_id = ${userId}`;
     if (entries.length === 0) return res.status(404).json({ message: 'Diary entry not found.' });
     if (entries[0].url) {
       await del(entries[0].url, { token: process.env.BLOB_READ_WRITE_TOKEN });
     }
-    await sql`DELETE FROM diary_entries WHERE id = ${id} AND user_id = ${userId}`;
+    const result = await sql`DELETE FROM diary_entries WHERE id = ${id} AND user_id = ${userId}`;
     res.json({ message: 'Diary entry deleted.' });
 });
 
